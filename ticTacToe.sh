@@ -38,11 +38,23 @@ function whoPlayFirst() {
    fi
 }
 
+#Function to display board
+function displayBoard() {
+
+   for ((i=1; i<=9; i+=3))
+   do
+      echo "---------------------"
+      echo " |  ${gameBoard[$i]}  |  ${gameBoard[$(($i+1))]}  |  ${gameBoard[$(($i+2))]}  | "
+   done
+   echo "---------------------"
+}
+
 #Main function
 function main() {
    reset
    assignSymbol
    whoPlayFirst
+   displayBoard
 }
 
 #Function call
