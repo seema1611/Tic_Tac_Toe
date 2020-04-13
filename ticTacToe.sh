@@ -8,6 +8,7 @@ LIMIT=9
 
 #Variable
 isWinner=0
+winCount=1
 
 #Function to reset the board
 function reset(){
@@ -18,29 +19,21 @@ function reset(){
 }
 
 #Function to assign symbol for player and computer
-function assignSymbol() {
-   if [ $((RANDOM%2)) -eq 0 ]
-   then
-      playerMark=X
-      computerMark=0
-   else
-      playerMark=0
-      computerMark=X
-   fi
-   echo "Player Mark:"  $playerMark
-   echo "Computer Mark:"  $computerMark
-}
-
-#Function to check who plays first
-function whoPlayFirst() {
+function assignSymbolAndTurn() {
    if [ $((RANDOM%2)) -eq 0 ]
    then
       echo "Player turn first"
+      playerMark=X
+      computerMark=0
       switchPlayer=0
    else
       echo "Computer turn first"
+      playerMark=0
+      computerMark=X
       switchPlayer=1
    fi
+   echo "Player Mark:"  $playerMark
+   echo "Computer Mark:"  $computerMark
 }
 
 #Function to display board
@@ -119,6 +112,26 @@ function checkTie() {
    fi
 }
 
+#Function to check win and move
+function checkComputerWin() {
+   while [ $winCount == $LIMIT ]
+   do
+      if [[ ${gameBoard[$winCount]} != $playerMark ]] && [[ ${gameBoard[$winCount]} != $computerMark ]]
+      then
+         gameBoard[$winCount]=$computerMark
+         checkWinningConditions $computerMark
+         if [[ $isWinner == 1 ]]
+         then
+            echo "Computer turn, move and (Win): $j"
+            displayBoard
+         fi
+         checkWinner "Computer"
+         gameBoard[$winCount]=$winCount
+      fi
+   ((winCount++))
+   done
+}
+
 #Function to check position is empty or NOT and insert symbol
 function checkEmptyForPlayer() {
    if [[ $playerPosition -ge 1 ]] && [[ $playerPosition -le $LIMIT ]] && [[ ${gameBoard[$playerPosition]} != $playerMark ]] &&
@@ -158,6 +171,7 @@ function playerTurn() {
 
 #Function of computer turn
 function computerTurn() {
+   checkComputerWin
    computerPosition=$((RANDOM%9 +1))
    echo "Computer turn, Enter the position: " $computerPosition
    checkEmptyForComputer $computerPosition $playerMark $computerMark
@@ -183,8 +197,7 @@ function switchThePlayer() {
 #Main function
 function main() {
    reset
-   assignSymbol
-   whoPlayFirst
+   assignSymbolAndTurn
    displayBoard
    switchThePlayer
 }
