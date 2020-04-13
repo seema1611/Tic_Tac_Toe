@@ -24,9 +24,26 @@ function assignSymbol() {
       playerMark=0
       computerMark=X
    fi
-
    echo "Player Mark:"  $playerMark
    echo "Computer Mark:"  $computerMark
 }
-reset
-assignSymbol
+
+#Function to check who plays first
+function whoPlayFirst() {
+   if [ $((RANDOM%2)) -eq 0 ]
+   then
+      echo "Player turn first"
+   else
+      echo "Computer turn first"
+   fi
+}
+
+#Main function
+function main() {
+   reset
+   assignSymbol
+   whoPlayFirst
+}
+
+#Function call
+main
