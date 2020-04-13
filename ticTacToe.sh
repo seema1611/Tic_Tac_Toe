@@ -36,14 +36,15 @@ function whoPlayFirst() {
    if [ $((RANDOM%2)) -eq 0 ]
    then
       echo "Player turn first"
+      switchPlayer=0
    else
       echo "Computer turn first"
+      switchPlayer=1
    fi
 }
 
 #Function to display board
 function displayBoard() {
-
    for ((i=1; i<=9; i+=3))
    do
       echo "---------------------"
@@ -54,55 +55,58 @@ function displayBoard() {
 
 #Function to check winning conditions
 function checkWinningConditions() {
-   checkRows
-   checkColumns
-   checkDiagonals
-
-   if [[ $isWinner == 1 ]]
-   then
-      echo "$1 is Won the game"
-      exit
-   fi
+   symbol=$1
+   checkRows $symbol
+   checkColumns $symbol
+   checkDiagonals $symbol
 }
 
 #Function to check rows win or NOT
 function checkRows() {
+   mark=$1
    for(( i=1; i<=9; i=$(($i+3 )) ))
    do
-
-      if [[ ${gameBoard[$i]} == $playerMark ]] && [[ ${gameBoard[$i]} == ${gameBoard[$(($i+1))]} ]] &&
+      if [[ ${gameBoard[$i]} == $mark ]] && [[ ${gameBoard[$i]} == ${gameBoard[$(($i+1))]} ]] &&
 		 [[ ${gameBoard[$(($i+1))]} == ${gameBoard[$(($i+2))]} ]]
       then
          isWinner=1
       fi
-
    done
 }
 
 #Function to check column win or NOT
 function checkColumns() {
+   mark=$1
    for(( i=1; i<=9; i++ ))
    do
-
-      if [[ ${gameBoard[$i]} == $playerMark ]] && [[ ${gameBoard[$i]} == ${gameBoard[$(($i+3))]} ]] &&
+      if [[ ${gameBoard[$i]} == $mark ]] && [[ ${gameBoard[$i]} == ${gameBoard[$(($i+3))]} ]] &&
 		 [[ ${gameBoard[$(($i+3))]} == ${gameBoard[$(($i+6))]} ]]
       then
          isWinner=1
       fi
-
    done
 }
 
 #Function to check diagonal is win or not
 function checkDiagonals() {
-   if [[ ${gameBoard[1]} == $playerMark ]] && [[ ${gameBoard[1]} == ${gameBoard[5]} ]] &&
+   mark=$1
+   if [[ ${gameBoard[1]} == $mark ]] && [[ ${gameBoard[1]} == ${gameBoard[5]} ]] &&
 		 [[ ${gameBoard[5]} == ${gameBoard[9]} ]]
    then
       isWinner=1
-   elif [[ ${gameBoard[3]} == $playerMark ]] && [[ ${gameBoard[3]} == ${gameBoard[5]} ]] &&
+   elif [[ ${gameBoard[3]} == $mark ]] && [[ ${gameBoard[3]} == ${gameBoard[5]} ]] &&
 		 [[ ${gameBoard[5]} == ${gameBoard[7]} ]]
    then
       isWinner=1
+   fi
+}
+
+#Function to check winner
+function checkWinner() {
+   if [[ $isWinner == 1 ]]
+   then
+      echo "-----$1 is Won the game-----"
+      exit
    fi
 }
 
@@ -116,21 +120,64 @@ function checkTie() {
 }
 
 #Function to check position is empty or NOT and insert symbol
-function checkEmpty() {
-   if [[ $position -ge 1 ]] && [[ $position -le 9 ]]
+function checkEmptyForPlayer() {
+   if [[ $playerPosition -ge 1 ]] && [[ $playerPosition -le $LIMIT ]] && [[ ${gameBoard[$playerPosition]} != $playerMark ]] &&
+       [[ ${gameBoard[$playerPosition]} != $computerMark ]]
    then
-
-      if [[ ${gameBoard[$position]} != $playerMark ]]
-      then
-         gameBoard[$position]=$playerMark
-         ((count++))
-      else
-         echo "Position if full"
-      fi
-
+      gameBoard[$playerPosition]=$playerMark
+      ((count++))
+      displayBoard
    else
-      echo "Invalid Position"
+      echo "Position is either not valid or not empty"
+      switchThePlayer
    fi
+}
+
+#Function to check position is empty or NOT and insert symbol
+function checkEmptyForComputer() {
+   if [[ $computerPosition -ge 1 ]] && [[ $computerPosition -le $LIMIT ]] && [[ ${gameBoard[$computerPosition]} != $playerMark ]] &&
+       [[ ${gameBoard[$computerPosition]} != $computerMark ]]
+   then
+      gameBoard[$computerPosition]=$computerMark
+      ((count++))
+      displayBoard
+   else
+      echo "Position is either not valid or not empty"
+      switchThePlayer
+   fi
+}
+
+#Function of player turn
+function playerTurn() {
+   read -p "Player turn, Enter the position: " playerPosition
+   checkEmptyForPlayer $playerPosition $playerMark $computerMark
+   checkWinningConditions $playerMark
+   checkWinner "Player"
+   switchPlayer=1
+}
+
+#Function of computer turn
+function computerTurn() {
+   computerPosition=$((RANDOM%9 +1))
+   echo "Computer turn, Enter the position: " $computerPosition
+   checkEmptyForComputer $computerPosition $playerMark $computerMark
+   checkWinningConditions $computerMark
+   checkWinner "Computer"
+   switchPlayer=0
+}
+
+#Function to switch the player
+function switchThePlayer() {
+   while [[ $count -ne $LIMIT ]]
+   do
+      if [[ $switchPlayer -eq 0 ]]
+      then
+         playerTurn
+      else
+         computerTurn
+      fi
+   done
+   checkTie
 }
 
 #Main function
@@ -139,15 +186,7 @@ function main() {
    assignSymbol
    whoPlayFirst
    displayBoard
-   while [[ $count -ne $LIMIT ]]
-   do
-      read -p "Enter the position number between 1-9: " position
-      checkEmpty
-      displayBoard
-      checkWinningConditions "Player"
-   done
-   checkTie
+   switchThePlayer
 }
-
-#Function call
+#Main function call
 main
