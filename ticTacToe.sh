@@ -9,6 +9,7 @@ LIMIT=9
 #Variable
 isWinner=0
 winCount=1
+blockCount=1
 
 #Function to reset the board
 function reset(){
@@ -122,13 +123,38 @@ function checkComputerWin() {
          checkWinningConditions $computerMark
          if [[ $isWinner == 1 ]]
          then
-            echo "Computer turn, move and (Win): $j"
+            echo "Computer turn, move and [Win]: $j"
             displayBoard
          fi
          checkWinner "Computer"
          gameBoard[$winCount]=$winCount
       fi
    ((winCount++))
+   done
+}
+
+#Function to play and block opponant
+function checkComputerBlock() {
+   while [[ $blockCount == $LIMIT ]]
+   do
+
+      if [[ ${gameBoard[$blockCount]} != $playerMark ]] && [[ ${gameBoard[$blockCount]} != $computerMark ]]
+      then
+         gameBoard[$blockCount]=$playerMark
+         checkWinningConditions $playerMark
+         if [[ $isWinner == 1 ]]
+         then
+            echo "Computer turn, move and [Block]: $j"
+            gameBoard[$blockCount]=$computerMark
+            ((count++))
+            displayBoard
+            switchPlayer=0
+            switchThePlayer
+         else
+            gameBoard[$blockCount]=$blockCount
+         fi
+      fi
+      ((blockCount++))
    done
 }
 
@@ -172,6 +198,7 @@ function playerTurn() {
 #Function of computer turn
 function computerTurn() {
    checkComputerWin
+   checkComputerBlock
    computerPosition=$((RANDOM%9 +1))
    echo "Computer turn, Enter the position: " $computerPosition
    checkEmptyForComputer $computerPosition $playerMark $computerMark
