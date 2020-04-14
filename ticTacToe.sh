@@ -196,6 +196,30 @@ function checkComputerCenter() {
    fi
 }
 
+#Function to play at sides
+function checkComputerSide() {
+   corners[1]=2
+   corners[2]=4
+   corners[3]=6
+   corners[4]=8
+
+   random=$((RANDOM%4+1))
+   sidePosition=${sides[$random]}
+
+   if [[ ${gameBoard[$sidePosition]} != $playerMark ]] && [[ ${gameBoard[$sidePosition]} != $computerMark ]]
+   then
+      echo "Computer turn, move towards sides: $sidePosition"
+      gameBoard[$sidePosition]=$computerSymbol
+      ((count++))
+      displayBoard
+      switchPlayer=0
+      switchThePlayer
+   else
+      echo "The Position is not empty. enter the again"
+      checkComputerSide $playerMark $computerMark
+   fi
+}
+
 #Function to check position is empty or NOT and insert symbol
 function checkEmptyForPlayer() {
    if [[ $playerPosition -ge 1 ]] && [[ $playerPosition -le $LIMIT ]] && [[ ${gameBoard[$playerPosition]} != $playerMark ]] &&
@@ -239,6 +263,7 @@ function computerTurn() {
    checkComputerBlock
    checkComputerCorner
    checkComputerCenter
+   checkComputerSide
    computerPosition=$((RANDOM%9 +1))
    echo "Computer turn, Enter the position: " $computerPosition
    checkEmptyForComputer $computerPosition $playerMark $computerMark
