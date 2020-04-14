@@ -8,6 +8,7 @@ LIMIT=9
 
 #Variable
 isWinner=0
+count=1
 winCount=1
 blockCount=1
 cornerCount=1
@@ -182,6 +183,19 @@ function checkComputerCorner() {
    fi
 }
 
+#Function to play at center
+function checkComputerCenter() {
+   center=5
+   if [[ ${gameBoard[$center]} != $playerMark ]] && [[ ${gameBoard[$center]} != $computerMark ]]
+   then
+      gameBoard[5]=$computerMark
+      echo "Computer turn, move towards center: $center"
+      displayBoard
+      switchPlayer=0
+      switchThePlayer
+   fi
+}
+
 #Function to check position is empty or NOT and insert symbol
 function checkEmptyForPlayer() {
    if [[ $playerPosition -ge 1 ]] && [[ $playerPosition -le $LIMIT ]] && [[ ${gameBoard[$playerPosition]} != $playerMark ]] &&
@@ -224,6 +238,7 @@ function computerTurn() {
    checkComputerWin
    checkComputerBlock
    checkComputerCorner
+   checkComputerCenter
    computerPosition=$((RANDOM%9 +1))
    echo "Computer turn, Enter the position: " $computerPosition
    checkEmptyForComputer $computerPosition $playerMark $computerMark
