@@ -10,6 +10,7 @@ LIMIT=9
 isWinner=0
 winCount=1
 blockCount=1
+cornerCount=1
 
 #Function to reset the board
 function reset(){
@@ -144,7 +145,7 @@ function checkComputerBlock() {
          checkWinningConditions $playerMark
          if [[ $isWinner == 1 ]]
          then
-            echo "Computer turn, move and [Block]: $j"
+            echo "Computer turn, move and [Block]: $blockCount"
             gameBoard[$blockCount]=$computerMark
             ((count++))
             displayBoard
@@ -156,6 +157,29 @@ function checkComputerBlock() {
       fi
       ((blockCount++))
    done
+}
+
+#Function to play at corners
+function checkComputerCorner() {
+   corners[1]=1
+   corners[2]=3
+   corners[3]=7
+   corners[4]=9
+   random=$((RANDOM%4+1))
+   cornerPosition=${corners[$random]}
+
+   if [[ ${gameBoard[$cornerPosition]} != $playerMark ]] && [[ ${gameBoard[$cornerPosition]} != $computerMark ]]
+   then
+      echo "Computer turn, move towards CORNERS: $cornerPosition"
+      gameBoard[$cornerPosition]=$computerMark
+      ((count++))
+      displayBoard
+      switchPlayer=0
+      switchThePlayer
+   else
+      echo "The Position is not empty, Enter the again"
+      checkComputerCorner $playerMark $computerMark
+   fi
 }
 
 #Function to check position is empty or NOT and insert symbol
@@ -199,6 +223,7 @@ function playerTurn() {
 function computerTurn() {
    checkComputerWin
    checkComputerBlock
+   checkComputerCorner
    computerPosition=$((RANDOM%9 +1))
    echo "Computer turn, Enter the position: " $computerPosition
    checkEmptyForComputer $computerPosition $playerMark $computerMark
