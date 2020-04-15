@@ -1,17 +1,18 @@
 #! /bin/bash -x
 
+echo "-----START TIC-TAC-TOE GAME-----"
+
 #Declaration of the Board
 declare -a gameBoard
+declare -A corners
+declare -A sides
 
 #Constants
 LIMIT=9
 
 #Variable
 isWinner=0
-count=1
-winCount=1
-blockCount=1
-cornerCount=1
+count=0
 
 #Function to reset the board
 function reset(){
@@ -39,6 +40,39 @@ function assignSymbolAndTurn() {
    echo "Computer Mark:"  $computerMark
 }
 
+#Function to check winning conditions
+function checkWinningConditions() {
+   mark=$1
+   isWinner=0
+
+   #Check rows here
+   for(( i=1; i<=LIMIT; i=$(($i+3 )) ))
+   do
+      if [[ ${gameBoard[$i]} == $mark ]] && [[ ${gameBoard[$i]} == ${gameBoard[$(($i+1))]} ]] && [[ ${gameBoard[$(($i+1))]} == ${gameBoard[$(($i+2))]} ]]
+      then
+         isWinner=1
+      fi
+   done
+
+   #Check column here
+   for(( i=1; i<=LIMIT; i++ ))
+   do
+      if [[ ${gameBoard[$i]} == $mark ]] && [[ ${gameBoard[$i]} == ${gameBoard[$(($i+3))]} ]] && [[ ${gameBoard[$(($i+3))]} == ${gameBoard[$(($i+6))]} ]]
+      then
+         isWinner=1
+      fi
+   done
+
+   #Check diagonal here
+   if [[ ${gameBoard[1]} == $mark ]] && [[ ${gameBoard[1]} == ${gameBoard[5]} ]] && [[ ${gameBoard[5]} == ${gameBoard[9]} ]]
+   then
+      isWinner=1
+   elif [[ ${gameBoard[3]} == $mark ]] && [[ ${gameBoard[3]} == ${gameBoard[5]} ]] && [[ ${gameBoard[5]} == ${gameBoard[7]} ]]
+   then
+      isWinner=1
+   fi
+}
+
 #Function to display board
 function displayBoard() {
    for ((i=1; i<=9; i+=3))
@@ -49,59 +83,11 @@ function displayBoard() {
    echo "---------------------"
 }
 
-#Function to check winning conditions
-function checkWinningConditions() {
-   symbol=$1
-   checkRows $symbol
-   checkColumns $symbol
-   checkDiagonals $symbol
-}
-
-#Function to check rows win or NOT
-function checkRows() {
-   mark=$1
-   for(( i=1; i<=9; i=$(($i+3 )) ))
-   do
-      if [[ ${gameBoard[$i]} == $mark ]] && [[ ${gameBoard[$i]} == ${gameBoard[$(($i+1))]} ]] &&
-		 [[ ${gameBoard[$(($i+1))]} == ${gameBoard[$(($i+2))]} ]]
-      then
-         isWinner=1
-      fi
-   done
-}
-
-#Function to check column win or NOT
-function checkColumns() {
-   mark=$1
-   for(( i=1; i<=9; i++ ))
-   do
-      if [[ ${gameBoard[$i]} == $mark ]] && [[ ${gameBoard[$i]} == ${gameBoard[$(($i+3))]} ]] &&
-		 [[ ${gameBoard[$(($i+3))]} == ${gameBoard[$(($i+6))]} ]]
-      then
-         isWinner=1
-      fi
-   done
-}
-
-#Function to check diagonal is win or not
-function checkDiagonals() {
-   mark=$1
-   if [[ ${gameBoard[1]} == $mark ]] && [[ ${gameBoard[1]} == ${gameBoard[5]} ]] &&
-		 [[ ${gameBoard[5]} == ${gameBoard[9]} ]]
-   then
-      isWinner=1
-   elif [[ ${gameBoard[3]} == $mark ]] && [[ ${gameBoard[3]} == ${gameBoard[5]} ]] &&
-		 [[ ${gameBoard[5]} == ${gameBoard[7]} ]]
-   then
-      isWinner=1
-   fi
-}
-
 #Function to check winner
 function checkWinner() {
    if [[ $isWinner == 1 ]]
    then
-      echo "-----$1 is Won the game-----"
+      echo "-----$1 is Won the game with $2 mark-----"
       exit
    fi
 }
@@ -116,8 +102,8 @@ function checkTie() {
 }
 
 #Function to check win and move
-function checkComputerWin() {
-   while [ $winCount == $LIMIT ]
+function checkComputerWinner() {
+   for(( winCount=1; winCount<=LIMIT; winCount++))
    do
       if [[ ${gameBoard[$winCount]} != $playerMark ]] && [[ ${gameBoard[$winCount]} != $computerMark ]]
       then
@@ -125,28 +111,26 @@ function checkComputerWin() {
          checkWinningConditions $computerMark
          if [[ $isWinner == 1 ]]
          then
-            echo "Computer turn, move and [Win]: $j"
+            echo "Computer turn, move towards Winner: $winCount"
             displayBoard
          fi
-         checkWinner "Computer"
+         checkWinner "Computer" $playerMark
          gameBoard[$winCount]=$winCount
       fi
-   ((winCount++))
    done
 }
 
 #Function to play and block opponant
 function checkComputerBlock() {
-   while [[ $blockCount == $LIMIT ]]
+   for ((blockCount=1; blockCount<=$LIMIT; blockCount++))
    do
-
       if [[ ${gameBoard[$blockCount]} != $playerMark ]] && [[ ${gameBoard[$blockCount]} != $computerMark ]]
       then
          gameBoard[$blockCount]=$playerMark
          checkWinningConditions $playerMark
          if [[ $isWinner == 1 ]]
          then
-            echo "Computer turn, move and [Block]: $blockCount"
+            echo "Computer turn, move and Block: $blockCount"
             gameBoard[$blockCount]=$computerMark
             ((count++))
             displayBoard
@@ -156,7 +140,6 @@ function checkComputerBlock() {
             gameBoard[$blockCount]=$blockCount
          fi
       fi
-      ((blockCount++))
    done
 }
 
@@ -171,7 +154,7 @@ function checkComputerCorner() {
 
    if [[ ${gameBoard[$cornerPosition]} != $playerMark ]] && [[ ${gameBoard[$cornerPosition]} != $computerMark ]]
    then
-      echo "Computer turn, move towards CORNERS: $cornerPosition"
+      echo "Computer turn, move towards Corners: $cornerPosition"
       gameBoard[$cornerPosition]=$computerMark
       ((count++))
       displayBoard
@@ -205,11 +188,10 @@ function checkComputerSide() {
 
    random=$((RANDOM%4+1))
    sidePosition=${sides[$random]}
-
    if [[ ${gameBoard[$sidePosition]} != $playerMark ]] && [[ ${gameBoard[$sidePosition]} != $computerMark ]]
    then
       echo "Computer turn, move towards sides: $sidePosition"
-      gameBoard[$sidePosition]=$computerSymbol
+      gameBoard[$sidePosition]=$computerMark
       ((count++))
       displayBoard
       switchPlayer=0
@@ -221,29 +203,21 @@ function checkComputerSide() {
 }
 
 #Function to check position is empty or NOT and insert symbol
-function checkEmptyForPlayer() {
-   if [[ $playerPosition -ge 1 ]] && [[ $playerPosition -le $LIMIT ]] && [[ ${gameBoard[$playerPosition]} != $playerMark ]] &&
-       [[ ${gameBoard[$playerPosition]} != $computerMark ]]
+function checkEmpty() {
+   position=$1
+   if [[ $position -ge 1 ]] && [[ $position -le $LIMIT ]] && [[ ${gameBoard[$position]} != $playerMark ]] &&
+		 [[ ${gameBoard[$position]} != $computerMark ]]
    then
-      gameBoard[$playerPosition]=$playerMark
+      if [[ $switchSymbol -eq 1 ]]
+      then
+         gameBoard[$position]=$playerMark
+      else
+         gameBoard[$position]=$computerMark
+      fi
       ((count++))
       displayBoard
    else
-      echo "Position is either not valid or not empty"
-      switchThePlayer
-   fi
-}
-
-#Function to check position is empty or NOT and insert symbol
-function checkEmptyForComputer() {
-   if [[ $computerPosition -ge 1 ]] && [[ $computerPosition -le $LIMIT ]] && [[ ${gameBoard[$computerPosition]} != $playerMark ]] &&
-       [[ ${gameBoard[$computerPosition]} != $computerMark ]]
-   then
-      gameBoard[$computerPosition]=$computerMark
-      ((count++))
-      displayBoard
-   else
-      echo "Position is either not valid or not empty"
+      echo "Either Position is not valid or not empty"
       switchThePlayer
    fi
 }
@@ -251,32 +225,34 @@ function checkEmptyForComputer() {
 #Function of player turn
 function playerTurn() {
    read -p "Player turn, Enter the position: " playerPosition
-   checkEmptyForPlayer $playerPosition $playerMark $computerMark
+   switchSymbol=1
+   checkEmpty $playerPosition $playerMark $computerMark
    checkWinningConditions $playerMark
-   checkWinner "Player"
+   checkWinner "Player" $playerMark
    switchPlayer=1
 }
 
 #Function of computer turn
 function computerTurn() {
-   checkComputerWin
+   checkComputerWinner
    checkComputerBlock
    checkComputerCorner
    checkComputerCenter
    checkComputerSide
-   computerPosition=$((RANDOM%9 +1))
-   echo "Computer turn, Enter the position: " $computerPosition
-   checkEmptyForComputer $computerPosition $playerMark $computerMark
+   computerPosition=$((RANDOM%9+1))
+   echo "Player turn, Enter the position: " computerPosition
+   switchSymbol=1
+   checkEmpty $computerPosition $playerMark $computerMark
    checkWinningConditions $computerMark
-   checkWinner "Computer"
-   switchPlayer=0
+   checkWinner "Computer" $compuyterMark
+   switchPlayer=1
 }
 
 #Function to switch the player
 function switchThePlayer() {
    while [[ $count -ne $LIMIT ]]
    do
-      if [[ $switchPlayer -eq 0 ]]
+      if [[ $switchPlayer -eq 0 ]]		#switch player generated in assignSymbolandturn function
       then
          playerTurn
       else
